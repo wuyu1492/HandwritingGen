@@ -131,14 +131,13 @@ class Model():
         output = tf.nn.xw_plus_b(out_cell2, mdn_w, mdn_b) #data flows through dense nn
 
 
-        # TODO
         def get_logits(output):
             x, y, eos = tf.split(output, 3, 1)
             return x, y, eos
 
         def get_loss(x1_data, x2_data, eos_data, x, y, eos):
             term1 = tf.losses.mean_squared_error(x1_data, x)
-            term2 = tf.losses.mean_squared_error(x1_data, x)
+            term2 = tf.losses.mean_squared_error(x2_data, y)
             term3 = tf.losses.softmax_cross_entropy(eos_data, eos)
 
             return tf.reduce_sum(term1 + term2) #do outer summation
@@ -148,9 +147,9 @@ class Model():
         flat_target_data = tf.reshape(self.target_data,[-1, 3])
         [x1_data, x2_data, eos_data] = tf.split(flat_target_data, 3, 1) #we might as well split these now
 
-        self.x1, self.y1, self.eos = get_logits(output)#TODO
+        self.x, self.y, self.eos = get_logits(output)
 
-        loss = get_loss(x1_data, x2_data, eos_data, self.x1, self.y1 ,self.eos)
+        loss = get_loss(x1_data, x2_data, eos_data, self.x, self.y ,self.eos)
         self.cost = loss / (self.batch_size * self.tsteps)
 
         # ----- bring together all variables and prepare for training
