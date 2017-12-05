@@ -50,14 +50,14 @@ def sample(input_text, model, args):
         feed = {model.input_data: prev_x, model.char_seq: one_hot, model.init_kappa: kappa, \
                 model.istate_cell0.c: c0, model.istate_cell1.c: c1, model.istate_cell2.c: c2, \
                 model.istate_cell0.h: h0, model.istate_cell1.h: h1, model.istate_cell2.h: h2}
-        fetch = [model.x, model.y, model.eos, \
+        fetch = [model.x, model.y, model.eos, model.eos_softmax,\
                  model.window, model.phi, model.new_kappa, model.alpha, \
                  model.fstate_cell0.c, model.fstate_cell1.c, model.fstate_cell2.c,\
                  model.fstate_cell0.h, model.fstate_cell1.h, model.fstate_cell2.h]
-        [x, y, eos, window, phi, kappa, alpha, \
+        [x, y, eos, eos_softmax, window, phi, kappa, alpha, \
                  c0, c1, c2, h0, h1, h2] = model.sess.run(fetch, feed)
         
-        if 0.35 < eos[0][0]:
+        if 0.1 < eos_softmax[0][0]:
             eos = 1
         else:
             eos = 0 # use 0.5 as arbitrary boundary
