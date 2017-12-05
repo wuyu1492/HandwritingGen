@@ -33,7 +33,7 @@ def main():
 
     parser.add_argument('--grad_clip', type=float, default=10., help='clip gradients to this magnitude')
     parser.add_argument('--optimizer', type=str, default='rmsprop', help="ctype of optimizer: 'rmsprop' 'adam'")
-    parser.add_argument('--learning_rate', type=float, default=1e-4, help='learning rate')
+    parser.add_argument('--learning_rate', type=float, default=1e-3, help='learning rate')
     parser.add_argument('--lr_decay', type=float, default=1.0, help='decay rate for learning rate')
     parser.add_argument('--decay', type=float, default=0.95, help='decay rate for rmsprop')
     parser.add_argument('--momentum', type=float, default=0.9, help='momentum for rmsprop')
