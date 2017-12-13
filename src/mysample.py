@@ -57,18 +57,19 @@ def sample(input_text, model, args):
         [x, y, eos, window, phi, kappa, alpha, \
                  c0, c1, c2, h0, h1, h2] = model.sess.run(fetch, feed)
         
-        for i in range(len(eos)):
-            if 0.99 < eos[i]:
-                eos[i] = 1
-            else:
-                eos[i] = 0 # use 0.5 as arbitrary boundary
+        #print("x, y, eos, size:", x.shape, y.shape, eos.shape)
+
+        if 0.5 < eos[0][0]:
+            eos[0][0] = 1
+        else:
+            eos[0][0] = 0 # use 0.5 as arbitrary boundary
                 
         # store the info at this time step
         windows.append(window)
         phis.append(phi[0])
         kappas.append(kappa[0].T)
         #pis.append(pi[0])
-        strokes.append([x, y, eos])
+        strokes.append([x[0][0], y[0][0], eos[0][0]])
         
         # test if finished (has the read head seen the whole ascii sequence?)
         # main_kappa_idx = np.where(alpha[0]==np.max(alpha[0]));
@@ -76,7 +77,7 @@ def sample(input_text, model, args):
         finished = True if i > args.tsteps else False
         
         # new input is previous output
-        prev_x[0][0] = np.array([x, y, eos], dtype=np.float32)
+        prev_x[0][0] = np.array([x, y, eos], dtype=np.float32).squeeze(axis=(1,2))
         i+=1
 
     windows = np.vstack(windows)
@@ -147,6 +148,7 @@ def line_plot(strokes, title, figsize = (20,2), save_path='.'):
     for i in range(len(eos_preds)-1):
         start = eos_preds[i]+1
         stop = eos_preds[i+1]
+        print(strokes.shape)
         plt.plot(strokes[start:stop,0], strokes[start:stop,1],'b-', linewidth=2.0) #draw a stroke
     plt.title(title,  fontsize=20)
     plt.gca().invert_yaxis()
