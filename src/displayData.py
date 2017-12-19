@@ -26,9 +26,9 @@ class DataLoader():
         stroke_dir = self.data_dir + "/lineStrokes"
         ascii_dir = self.data_dir + "/ascii"
 
-        if not (os.path.exists(data_file)) :
-            print("\tcreating training data cpkl file from raw source")
-            self.preprocess(stroke_dir, ascii_dir, data_file)
+        #if not (os.path.exists(data_file)) :
+        print("\tcreating training data cpkl file from raw source")
+        self.preprocess(stroke_dir, ascii_dir, data_file)
 
         self.load_preprocessed(data_file)
         self.reset_batch_pointer()
@@ -117,11 +117,16 @@ class DataLoader():
                 line_number = stroke_file[-6:-4]
                 line_number = int(line_number) - 1
                 ascii = getAscii(ascii_file, line_number)
-                if len(ascii) > 10:
+                if len(ascii)<10:
                     strokes.append(stroke)
                     asciis.append(ascii)
                 else:
-                    print("line length was too short. line was: " + ascii)
+                    print("length was too long.")
+#                if len(ascii) > 10:
+#                    strokes.append(stroke)
+#                    asciis.append(ascii)
+#                else:
+#                    print("line length was too short. line was: " + ascii)
                 
         assert(len(strokes)==len(asciis)), "There should be a 1:1 correspondence between stroke data and ascii labels."
         f = open(data_file,"wb")
@@ -232,7 +237,7 @@ def line_plot(strokes, title):
 # build data loader
 
 batch_size = 5
-tsteps = 700
+tsteps = 300
 data_scale = 50
 U_items = int(tsteps/20)
 data_loader = DataLoader(batch_size=batch_size, tsteps=tsteps, \
