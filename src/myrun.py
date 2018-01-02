@@ -15,7 +15,7 @@ def main():
     #general model params
     parser.add_argument('--train', dest='train', action='store_true', help='train the model')
     parser.add_argument('--sample', dest='train', action='store_false', help='sample from the model')
-    parser.add_argument('--rnn_size', type=int, default=100, help='size of RNN hidden state')
+    parser.add_argument('--rnn_size', type=int, default=128, help='size of RNN hidden state')
     parser.add_argument('--tsteps', type=int, default=150, help='RNN time steps (for backprop)')
     parser.add_argument('--nmixtures', type=int, default=8, help='number of gaussian mixtures')
 
@@ -65,7 +65,10 @@ def train_model(args):
     logger.write("building model...")
     model = Model(args, logger=logger)
 
-    global_step = 0
+    logger.write("attempt to load saved model...")
+    load_was_success, global_step = model.try_load_model(args.save_path)
+
+    #global_step = 0
 
 
     v_x, v_y, v_s, v_c = data_loader.validation_data()
@@ -111,8 +114,7 @@ def train_model(args):
 
 def sample_model(args, logger=None):
     if args.text == '':
-        strings = ['call me ishmael some years ago', 'A project by Sam Greydanus', 'mmm mmm mmm mmm mmm mmm mmm', \
-	    'What I cannot create I do not understand', 'You know nothing Jon Snow'] # test strings
+        strings = ["apple apple", "waterfall"] # test strings
     else:
         strings = [args.text]
 

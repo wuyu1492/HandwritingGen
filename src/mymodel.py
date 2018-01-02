@@ -122,7 +122,7 @@ class Model():
 
 
         # ----- (start with a dense layer)
-        n_out = 3
+        n_out = 4
         with tf.variable_scope('mdn_dense'):
             mdn_w = tf.get_variable("output_w", [self.rnn_size, n_out], initializer=self.graves_initializer)
             mdn_b = tf.get_variable("output_b", [n_out], initializer=self.graves_initializer)
@@ -132,29 +132,28 @@ class Model():
 
 
         def get_logits(output):
-            x, y, eos = tf.split(output, n_out, 1)
-            return x, y, eos
+            x, y, eos0, eos1 = tf.split(output, n_out, 1)
+            return x, y, tf.concat([eos0, eos1],1)
 
         def get_loss(x1_data, x2_data, eos_data, x, y, eos):
             #x_weight = 0.99
             #eos_weight = 1.0-x_weight
             term1 = tf.losses.mean_squared_error(x1_data, x)
             term2 = tf.losses.mean_squared_error(x2_data, y)
-            term3 = tf.losses.mean_squared_error(eos_data, eos)
-            #term3 = tf.losses.softmax_cross_entropy(onehot_labels=eos_data, logits=eos)
+            #term3 = tf.losses.mean_squared_error(eos_data, eos)
+            term3 = tf.losses.softmax_cross_entropy(onehot_labels=eos_data, logits=eos)
 
             return tf.reduce_sum(term1 + term2 + term3) #do outer summation
-
 
         # reshape target data (as we did the input data)
         flat_target_data = tf.reshape(self.target_data,[-1, 3])
         [x1_data, x2_data, eos_data] = tf.split(flat_target_data, 3, 1) #we might as well split these now
         eos_data = tf.squeeze(eos_data)
-        #eos_data = tf.one_hot(tf.to_int32(eos_data), depth=2, axis=1)
+        eos_data = tf.one_hot(tf.to_int32(eos_data), depth=2, axis=1)
 
         self.x, self.y, self.eos = get_logits(output)
 
-        #self.eos_softmax = tf.nn.softmax(self.eos)
+        self.eos_softmax = tf.nn.softmax(self.eos)
         
         loss = get_loss(x1_data, x2_data, eos_data, self.x, self.y ,self.eos)
         self.cost = loss / (self.batch_size * self.tsteps)

@@ -1,8 +1,10 @@
 import numpy as np
 import tensorflow as tf
 import pickle as pickle
+import sys
 
 from utils import *
+
 
 def sample_gaussian2d(mu1, mu2, s1, s2, rho):
     mean = [mu1, mu2]
@@ -14,9 +16,9 @@ def get_style_states(model, args):
     c0, c1, c2 = model.istate_cell0.c.eval(), model.istate_cell1.c.eval(), model.istate_cell2.c.eval()
     h0, h1, h2 = model.istate_cell0.h.eval(), model.istate_cell1.h.eval(), model.istate_cell2.h.eval()
     if args.style is -1: return [c0, c1, c2, h0, h1, h2] #model 'chooses' random style
-
-    with open(os.path.join(args.data_dir, 'styles.p'),'r') as f:
-        style_strokes, style_strings = pickle.load(f)
+    with open(os.path.join(args.data_dir, 'styles.p'),'rb') as f:
+        styles = pickle.load(f, encoding='latin1')
+        style_strokes, style_strings = styles
 
     style_strokes, style_string = style_strokes[args.style], style_strings[args.style]
     style_onehot = [to_one_hot(style_string, model.ascii_steps, args.alphabet)]
@@ -50,16 +52,16 @@ def sample(input_text, model, args):
         feed = {model.input_data: prev_x, model.char_seq: one_hot, model.init_kappa: kappa, \
                 model.istate_cell0.c: c0, model.istate_cell1.c: c1, model.istate_cell2.c: c2, \
                 model.istate_cell0.h: h0, model.istate_cell1.h: h1, model.istate_cell2.h: h2}
-        fetch = [model.x, model.y, model.eos, \
+        fetch = [model.x, model.y, model.eos, model.eos_softmax,\
                  model.window, model.phi, model.new_kappa, model.alpha, \
                  model.fstate_cell0.c, model.fstate_cell1.c, model.fstate_cell2.c,\
                  model.fstate_cell0.h, model.fstate_cell1.h, model.fstate_cell2.h]
-        [x, y, eos, window, phi, kappa, alpha, \
+        [x, y, eos, eos_softmax,  window, phi, kappa, alpha, \
                  c0, c1, c2, h0, h1, h2] = model.sess.run(fetch, feed)
         
-        #print("x, y, eos, size:", x.shape, y.shape, eos.shape)
-
-        if 0.5 < eos[0][0]:
+        eos = [[0]]
+        print("eos softmax", eos_softmax[0][0], eos_softmax[0][1])
+        if eos_softmax[0][1]> 0.5:
             eos[0][0] = 1
         else:
             eos[0][0] = 0 # use 0.5 as arbitrary boundary
@@ -148,7 +150,6 @@ def line_plot(strokes, title, figsize = (20,2), save_path='.'):
     for i in range(len(eos_preds)-1):
         start = eos_preds[i]+1
         stop = eos_preds[i+1]
-        print(strokes.shape)
         plt.plot(strokes[start:stop,0], strokes[start:stop,1],'b-', linewidth=2.0) #draw a stroke
     plt.title(title,  fontsize=20)
     plt.gca().invert_yaxis()
